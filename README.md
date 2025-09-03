@@ -1,65 +1,58 @@
-# dev-offline-kit (offline total, sem sudo)
 
-Objetivo: instalar Maven, Gradle e utilitários (jq, yq) + plugins úteis do zsh em ambientes com proxy restritivo, sem Homebrew e sem rede. Basta baixar este repositório como ZIP, extrair e rodar os scripts locais.
+# dev-offline-kit
+
+Ferramentas de desenvolvimento totalmente offline, sem necessidade de sudo, Homebrew ou acesso à internet.  
+Ideal para ambientes restritos (proxy, rede fechada, máquinas corporativas).
+
+## Objetivo
+
+Instalar Maven, Gradle, utilitários (jq) e plugins úteis do Zsh em sistemas macOS (Apple Silicon) e Linux(x86_64), usando apenas scripts locais e arquivos já incluídos no repositório.
+
+## Principais recursos
+
+- Instalação offline de Maven, Gradle e jq.
+- Instalação de plugins Zsh populares: autosuggestions, syntax-highlighting, history-substring-search.
+- Scripts adaptados para detectar automaticamente o sistema operacional e arquitetura (macOS Apple Silicon/x86_64, Linux ARM/x86_64).
+- Não requer permissões administrativas (sudo) nem acesso à internet.
+- Fácil remoção/desinstalação.
 
 ## Requisitos
-- macOS (arm64 ou x86_64) com bash + unzip (padrão do sistema).
+
+- macOS (arm64 ou x86_64) ou Linux (arm64 ou x86_64).
+- Bash e unzip instalados (padrão do sistema).
 - Sem internet; sem sudo.
 
 ## Instalação
-1. Baixe este repositório como ZIP (Code → Download ZIP) e extraia.
+
+1. Baixe este repositório como ZIP e extraia.
 2. No diretório extraído, rode:
+   ```sh
    bash install.sh
    bash zsh/install-zsh-plugins.sh
+   ```
 3. Ative o PATH:
+   ```sh
    source ~/.zprofile
-4. Teste:
+   ```
+4. Teste as ferramentas:
+   ```sh
    mvn -v
    gradle -v
    jq --version
-   yq --version
+   ```
 
-## Conteúdo instalado
-- Maven: ~/.local/tools/maven/<versão>/apache-maven-<versão>
-- Gradle: ~/.local/tools/gradle/<versão>/gradle-<versão>
-- jq / yq: ~/.local/tools/*/portable/
-- Shims: ~/.local/bin/{mvn,gradle,jq,yq}
-- Plugins zsh: ~/.local/share/zsh-plugins/ (autosuggestions, syntax-highlighting, history-substring-search)
+## Estrutura instalada
 
-## Notas sobre dependências de build
-Este kit só cobre as ferramentas. Se seu projeto precisar baixar dependências (Maven Central etc.), será necessário acesso a um mirror interno ou liberar os domínios no proxy.
+- Ferramentas: `~/.local/tools/<tool>/<versão>/`
+- Binários (shims): `~/.local/bin/{mvn,gradle,jq,yq}`
+- Plugins Zsh: `~/.local/share/zsh-plugins/`
+- Manifests e payloads organizados por sistema/arquitetura.
 
-## Desinstalar
-- Remova ~/.local/tools/<tool>/...
-- Remova shims em ~/.local/bin/...
-- Remova o snippet do ~/.zshrc e as linhas do ~/.zprofile (PATH).
+## Observações
+
+- O kit instala apenas as ferramentas. Para baixar dependências de projetos (ex: Maven Central), é necessário acesso à rede ou a um mirror interno.
+- Para desinstalar, remova os diretórios em `~/.local/tools/`, os shims em `~/.local/bin/` e as linhas adicionadas ao `~/.zprofile`.
 
 ## Licenças
-Inclua textos de licença dos projetos em /licenses conforme necessário.
 
-
-dev-offline-kit/
-├─ README.md
-├─ install_offline.sh                  # não baixa nada: só copia e cria shims
-├─ manifests/
-│  ├─ tools-macos-arm64.json
-│  └─ tools-macos-x86_64.json
-├─ payloads/                           # TUDO que será instalado vem daqui
-│  ├─ maven/
-│  │  └─ 3.9.9/apache-maven-3.9.9/...
-│  ├─ gradle/
-│  │  └─ 8.10.2/gradle-8.10.2/...
-│  ├─ jq/
-│  │  ├─ darwin-arm64/jq
-│  │  └─ darwin-x86_64/jq
-│  └─ yq/
-│     ├─ darwin-arm64/yq
-│     └─ darwin-x86_64/yq
-└─ zsh/
-   ├─ install-zsh-plugins.sh
-   ├─ snippets/zshrc.snippet
-   └─ plugins/
-      ├─ zsh-autosuggestions/...
-      ├─ zsh-syntax-highlighting/...
-      └─ zsh-history-substring-search/...
-      # (opcional) fzf-tab/ e binário do fzf em payloads/fzf/...
+Consulte os textos de licença dos projetos em `/licenses` conforme necessário.
