@@ -6,11 +6,12 @@ BIN_DIR="$HOME/.local/bin"
 ENV_ZPROFILE="$HOME/.zprofile"
 ZSHRC="$HOME/.zshrc"
 
-# Remove Maven, Gradle, jq
-rm -rf "$TOOLS_DIR/maven" "$TOOLS_DIR/gradle" "$TOOLS_DIR/jq"
+
+# Remove Maven, Gradle, jq, JDKs
+rm -rf "$TOOLS_DIR/maven" "$TOOLS_DIR/gradle" "$TOOLS_DIR/jq" "$TOOLS_DIR/java"
 
 # Remove shims
-rm -f "$BIN_DIR/maven" "$BIN_DIR/gradle" "$BIN_DIR/jq"
+rm -f "$BIN_DIR/maven" "$BIN_DIR/gradle" "$BIN_DIR/jq" "$BIN_DIR/java-switch"
 
 # Remove PATH and JVM options block from profile files
 remove_env_block() {
@@ -27,6 +28,7 @@ remove_env_block() {
 remove_env_block "$ENV_ZPROFILE"
 remove_env_block "$ZSHRC"
 
-echo "Ferramentas Maven, Gradle e jq removidas."
+echo "Ferramentas Maven, Gradle, jq e JDKs removidas."
 echo "Shims removidos de $BIN_DIR."
 echo "Blocos de configuração removidos de ~/.zprofile e ~/.zshrc."
+

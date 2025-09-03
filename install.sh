@@ -83,7 +83,57 @@ cp "$JQ_SRC" "${JQ_DST_DIR}/jq"
 chmod +x "${JQ_DST_DIR}/jq"
 make_shim "jq" "portable" "jq"
 
-# PATH + ajustes de JVM (opcional)
+
+# 4) JDKs (descompacta e organiza por arquitetura/versão)
+JDKS=(8 17 21)
+JAVA_DIR="${TOOLS_DIR}/java/${OS}-${ARCH}"
+JDK_SRC_DIR="${ROOT}/payloads/java/${OS}-${ARCH}"
+mkdir -p "$JAVA_DIR"
+for ver in "${JDKS[@]}"; do
+  JDK_TAR="${JDK_SRC_DIR}/jdk-${ver}.tar.gz"
+  JDK_DST="${JAVA_DIR}/${ver}"
+  if [[ -f "$JDK_TAR" ]]; then
+    mkdir -p "$JDK_DST"
+    tar -xzf "$JDK_TAR" -C "$JDK_DST" --strip-components=1
+    echo "JDK ${ver} instalado em $JDK_DST"
+  else
+    echo "JDK ${ver} não encontrado em $JDK_TAR (ignorado)"
+  fi
+done
+
+# Cria shim para java-switch
+JAVA_SWITCH_SHIM="${BIN_DIR}/java-switch"
+cat > "$JAVA_SWITCH_SHIM" <<'EOF'
+#!/usr/bin/env bash
+ver="$1"
+if [[ -z "$ver" ]]; then
+  echo "Uso: java-switch <versao>" >&2
+  exit 1
+fi
+JAVA_DIR="$HOME/.local/tools/java/${OS}-${ARCH}/$ver"
+if [[ ! -d "$JAVA_DIR" ]]; then
+  echo "JDK $ver não encontrado em $JAVA_DIR" >&2
+  exit 2
+fi
+JAVA_HOME="$JAVA_DIR"
+JAVA_BIN="$JAVA_HOME/bin"
+PROFILE="$HOME/.zprofile"
+ZSHRC="$HOME/.zshrc"
+for file in "$PROFILE" "$ZSHRC"; do
+  if [[ -f "$file" ]]; then
+    # Remove JAVA_HOME e PATH anteriores
+    sed -i.bak '/export JAVA_HOME=/d' "$file"
+    sed -i.bak '/export PATH="$JAVA_HOME\/bin:$PATH"/d' "$file"
+    rm -f "$file.bak"
+    # Adiciona novos
+    echo "export JAVA_HOME=\"$JAVA_HOME\"" >> "$file"
+    echo "export PATH=\"$JAVA_BIN:$PATH\"" >> "$file"
+  fi
+done
+echo "JAVA_HOME atualizado para $JAVA_HOME. Rode: source ~/.zprofile"
+EOF
+chmod +x "$JAVA_SWITCH_SHIM"
+
 
 # Função para adicionar bloco ao arquivo de perfil se não existir
 add_env_block() {
@@ -106,4 +156,6 @@ add_env_block "$HOME/.zshrc" && ADDED_PATH=1
 echo "Ferramentas instaladas em: $TOOLS_DIR"
 echo "Shims criados em: $BIN_DIR"
 [[ "${ADDED_PATH:-0}" == "1" ]] && echo '>> Adicionado PATH em ~/.zprofile (rode: source ~/.zprofile)'
-echo "Teste: mvn -v | gradle -v | jq --version | yq --version"
+echo "JDKs instalados em: $JAVA_DIR"
+echo "Use: java-switch <versao> para alternar JAVA_HOME (ex: java-switch 17)"
+echo "Teste: mvn -v | gradle -v | jq --version | java -version"
