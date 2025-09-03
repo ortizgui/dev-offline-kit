@@ -91,15 +91,11 @@ JDK_SRC_DIR="${ROOT}/payloads/java/${OS}-${ARCH}"
 mkdir -p "$JAVA_DIR"
 for ver in "${JDKS[@]}"; do
   JDK_TAR="${JDK_SRC_DIR}/jdk-${ver}.tar.gz"
-  if [[ "$OS" == "macos" ]]; then
-    JDK_DST="${JAVA_DIR}/${ver}/Contents/Home"
-  else
-    JDK_DST="${JAVA_DIR}/${ver}"
-  fi
+  JDK_DST="${JAVA_DIR}/${ver}"
   if [[ -f "$JDK_TAR" ]]; then
-    mkdir -p "$JDK_DST"
-    tar -xzf "$JDK_TAR" -C "$JDK_DST" --strip-components=1
-    echo "JDK ${ver} instalado em $JDK_DST"
+  mkdir -p "$JDK_DST"
+  tar -xzf "$JDK_TAR" -C "$JDK_DST" --strip-components=1
+  echo "JDK ${ver} instalado em $JDK_DST"
   else
     echo "JDK ${ver} não encontrado em $JDK_TAR (ignorado)"
   fi
