@@ -101,15 +101,27 @@ for ver in "${JDKS[@]}"; do
   fi
 done
 
-# Cria shim para java-switch
+# Cria shim para java-switch (agora detecta OS e ARCH internamente)
+
 JAVA_SWITCH_SHIM="${BIN_DIR}/java-switch"
 cat > "$JAVA_SWITCH_SHIM" <<'EOF'
 #!/usr/bin/env bash
+# Alterna JAVA_HOME e atualiza PATH para o JDK selecionado
 ver="$1"
 if [[ -z "$ver" ]]; then
   echo "Uso: java-switch <versao>" >&2
   exit 1
 fi
+UNAME_S="$(uname -s)"
+if [[ "$UNAME_S" == "Darwin" ]]; then
+  OS="macos"
+elif [[ "$UNAME_S" == "Linux" ]]; then
+  OS="linux"
+else
+  echo "Sistema operacional não suportado: $UNAME_S" >&2
+  exit 3
+fi
+ARCH="$(uname -m)"
 JAVA_DIR="$HOME/.local/tools/java/${OS}-${ARCH}/$ver"
 if [[ ! -d "$JAVA_DIR" ]]; then
   echo "JDK $ver não encontrado em $JAVA_DIR" >&2
@@ -123,13 +135,20 @@ for file in "$PROFILE" "$ZSHRC"; do
   if [[ -f "$file" ]]; then
     # Remove JAVA_HOME e PATH anteriores
     sed -i.bak '/export JAVA_HOME=/d' "$file"
-    sed -i.bak '/export PATH="$JAVA_HOME\/bin:$PATH"/d' "$file"
+    sed -i.bak '/export PATH=.*JAVA_HOME\/bin.*:/d' "$file"
     rm -f "$file.bak"
-    # Adiciona novos
+    # Adiciona JAVA_HOME e PATH preservando o PATH do usuário
     echo "export JAVA_HOME=\"$JAVA_HOME\"" >> "$file"
-    echo "export PATH=\"$JAVA_BIN:$PATH\"" >> "$file"
+    echo "export PATH=\"$HOME/.local/bin:$JAVA_HOME/bin:\$PATH\"" >> "$file"
   fi
 done
+# Cria shim java em ~/.local/bin/java se não existir ou se diferente
+JAVA_SHIM="$HOME/.local/bin/java"
+JAVA_SHIM_CONTENT="#!/usr/bin/env bash\nif [[ -z \"\$JAVA_HOME\" ]]; then\n  echo \"JAVA_HOME não está definido. Rode: java-switch <versao>\" >&2\n  exit 1\nfi\nexec \"\$JAVA_HOME/bin/java\" \"\$@\"\n"
+if [[ ! -f "$JAVA_SHIM" ]] || ! grep -q 'exec "$JAVA_HOME/bin/java"' "$JAVA_SHIM"; then
+  echo -e "$JAVA_SHIM_CONTENT" > "$JAVA_SHIM"
+  chmod +x "$JAVA_SHIM"
+fi
 echo "JAVA_HOME atualizado para $JAVA_HOME. Rode: source ~/.zprofile"
 EOF
 chmod +x "$JAVA_SWITCH_SHIM"
