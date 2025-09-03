@@ -91,7 +91,11 @@ JDK_SRC_DIR="${ROOT}/payloads/java/${OS}-${ARCH}"
 mkdir -p "$JAVA_DIR"
 for ver in "${JDKS[@]}"; do
   JDK_TAR="${JDK_SRC_DIR}/jdk-${ver}.tar.gz"
-  JDK_DST="${JAVA_DIR}/${ver}"
+  if [[ "$OS" == "macos" ]]; then
+    JDK_DST="${JAVA_DIR}/${ver}/Contents/Home"
+  else
+    JDK_DST="${JAVA_DIR}/${ver}"
+  fi
   if [[ -f "$JDK_TAR" ]]; then
     mkdir -p "$JDK_DST"
     tar -xzf "$JDK_TAR" -C "$JDK_DST" --strip-components=1
@@ -123,11 +127,15 @@ else
 fi
 ARCH="$(uname -m)"
 JAVA_DIR="$HOME/.local/tools/java/${OS}-${ARCH}/$ver"
-if [[ ! -d "$JAVA_DIR" ]]; then
-  echo "JDK $ver não encontrado em $JAVA_DIR" >&2
+if [[ "$OS" == "macos" ]]; then
+  JAVA_HOME="$HOME/.local/tools/java/${OS}-${ARCH}/$ver/Contents/Home"
+else
+  JAVA_HOME="$HOME/.local/tools/java/${OS}-${ARCH}/$ver"
+fi
+if [[ ! -d "$JAVA_HOME" ]]; then
+  echo "JDK $ver não encontrado em $JAVA_HOME" >&2
   exit 2
 fi
-JAVA_HOME="$JAVA_DIR"
 JAVA_BIN="$JAVA_HOME/bin"
 PROFILE="$HOME/.zprofile"
 ZSHRC="$HOME/.zshrc"
