@@ -1,8 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+
 ARCH="$(uname -m)"                 # arm64 ou x86_64
-OS="macos"
+UNAME_S="$(uname -s)"
+
+if [[ "$UNAME_S" == "Darwin" ]]; then
+  OS="macos"
+  JQ_OS="darwin"
+elif [[ "$UNAME_S" == "Linux" ]]; then
+  OS="linux"
+  JQ_OS="linux"
+else
+  echo "Sistema operacional não suportado: $UNAME_S"
+  exit 1
+fi
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 TOOLS_DIR="${HOME}/.local/tools"
@@ -62,21 +74,14 @@ mkdir -p "$GRADLE_DST"
 rsync -a "${GRADLE_SRC}/" "$GRADLE_DST/"
 make_shim "gradle" "$GRADLE_VERSION" "gradle-${GRADLE_VERSION}/bin/gradle"
 
+
 # 3) jq (binário único)
-JQ_SRC="${ROOT}/payloads/jq/darwin-${ARCH}/jq"
+JQ_SRC="${ROOT}/payloads/jq/${JQ_OS}-${ARCH}/jq"
 JQ_DST_DIR="${TOOLS_DIR}/jq/portable"
 mkdir -p "$JQ_DST_DIR"
 cp "$JQ_SRC" "${JQ_DST_DIR}/jq"
 chmod +x "${JQ_DST_DIR}/jq"
 make_shim "jq" "portable" "jq"
-
-# 4) yq (binário único)
-YQ_SRC="${ROOT}/payloads/yq/darwin-${ARCH}/yq"
-YQ_DST_DIR="${TOOLS_DIR}/yq/portable"
-mkdir -p "$YQ_DST_DIR"
-cp "$YQ_SRC" "${YQ_DST_DIR}/yq"
-chmod +x "${YQ_DST_DIR}/yq"
-make_shim "yq" "portable" "yq"
 
 # PATH + ajustes de JVM (opcional)
 if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' "$ENV_ZPROFILE" 2>/dev/null; then
