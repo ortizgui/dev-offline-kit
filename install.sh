@@ -84,14 +84,24 @@ chmod +x "${JQ_DST_DIR}/jq"
 make_shim "jq" "portable" "jq"
 
 # PATH + ajustes de JVM (opcional)
-if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' "$ENV_ZPROFILE" 2>/dev/null; then
-  {
-    echo 'export PATH="$HOME/.local/bin:$PATH"'
-    echo 'export MAVEN_OPTS="-Xmx512m ${MAVEN_OPTS}"'
-    echo 'export GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx1g ${GRADLE_OPTS}"'
-  } >> "$ENV_ZPROFILE"
-  ADDED_PATH=1
-fi
+
+# Função para adicionar bloco ao arquivo de perfil se não existir
+add_env_block() {
+  local file="$1"
+  if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' "$file" 2>/dev/null; then
+    {
+      echo 'export PATH="$HOME/.local/bin:$PATH"'
+      echo 'export MAVEN_OPTS="-Xmx512m ${MAVEN_OPTS}"'
+      echo 'export GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx1g ${GRADLE_OPTS}"'
+    } >> "$file"
+    return 0
+  fi
+  return 1
+}
+
+ADDED_PATH=0
+add_env_block "$ENV_ZPROFILE" && ADDED_PATH=1
+add_env_block "$HOME/.zshrc" && ADDED_PATH=1
 
 echo "Ferramentas instaladas em: $TOOLS_DIR"
 echo "Shims criados em: $BIN_DIR"
