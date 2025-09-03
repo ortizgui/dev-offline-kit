@@ -182,7 +182,28 @@ add_env_block "$HOME/.zshrc" && ADDED_PATH=1
 
 echo "Ferramentas instaladas em: $TOOLS_DIR"
 echo "Shims criados em: $BIN_DIR"
-[[ "${ADDED_PATH:-0}" == "1" ]] && echo '>> Adicionado PATH em ~/.zprofile (rode: source ~/.zprofile)'
+[[ "${ADDED_PATH:-0}" == "1" ]] && echo '>> Adicionado PATH em ~/.zshrc (rode: source ~/.zshrc)'
 echo "JDKs instalados em: $JAVA_DIR"
 echo "Use: java-switch <versao> para alternar JAVA_HOME (ex: java-switch 17)"
+
+# Detecta maior versão de JDK instalada e executa java-switch automaticamente
+JDKS_INSTALLED=()
+for ver in 21 17 8; do
+  if [[ "$OS" == "macos" ]]; then
+    JAVA_HOME_AUTO="$HOME/.local/tools/java/${OS}-${ARCH}/$ver/Contents/Home"
+  else
+    JAVA_HOME_AUTO="$HOME/.local/tools/java/${OS}-${ARCH}/$ver"
+  fi
+  if [[ -d "$JAVA_HOME_AUTO" ]]; then
+    JDKS_INSTALLED+=("$ver")
+  fi
+done
+if [[ ${#JDKS_INSTALLED[@]} -gt 0 ]]; then
+  MAIOR_JDK="${JDKS_INSTALLED[0]}"
+  "$BIN_DIR/java-switch" "$MAIOR_JDK"
+  echo "JAVA_HOME já configurado para JDK $MAIOR_JDK. Rode: source ~/.zshrc"
+else
+  echo "Nenhum JDK encontrado para configurar JAVA_HOME automaticamente."
+fi
+
 echo "Teste: mvn -v | gradle -v | jq --version | java -version"
